@@ -58,4 +58,31 @@ def extract_ad_data():
         print("HTML do contêiner do anúncio:")
         print(container_html)
 
-        if not container_ht
+        if not container_html.strip():
+            print("⚠️ O contêiner do anúncio ainda está vazio!")
+            return {"image_url": None, "link_url": None}
+
+        # Buscar o link e a imagem dentro do contêiner
+        ad_link_element = ad_container.find_element(By.TAG_NAME, "a")
+        ad_image_element = ad_container.find_element(By.TAG_NAME, "img")
+
+        ad_link = ad_link_element.get_attribute("href")
+        ad_image = ad_image_element.get_attribute("src")
+
+        print(f"Imagem do anúncio: {ad_image}")
+        print(f"Link do anúncio: {ad_link}")
+
+        return {"image_url": ad_image, "link_url": ad_link}
+
+    except Exception as e:
+        print(f"Erro ao processar anúncio: {e}")
+        return {"image_url": None, "link_url": None}
+
+    finally:
+        driver.quit()
+        print("Fechando o navegador e finalizando o script...")
+
+if __name__ == "__main__":
+    ad_data = extract_ad_data()
+    print(f"Dados extraídos: {ad_data}")
+
