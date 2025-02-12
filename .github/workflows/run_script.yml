@@ -1,30 +1,61 @@
-name: Run Selenium Script
+import time
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from webdriver_manager.chrome import ChromeDriverManager
 
-on:
-  push:
-    branches:
-      - main  # Você pode alterar para o nome da sua branch principal
-  workflow_dispatch:
+def extract_ad_data():
+    print("Iniciando a extração de dados de anúncios...")
 
-jobs:
-  build:
-    runs-on: ubuntu-latest  # Usando uma máquina virtual do Ubuntu
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")  # Executando sem interface gráfica
+    chrome_options.add_argument("--no-sandbox")  # Necessário para ambientes como GitHub Actions
+    chrome_options.add_argument("--disable-dev-shm-usage")  # Necessário para ambientes como GitHub Actions
 
-    steps:
-    - name: Check out the repository
-      uses: actions/checkout@v3
+    # Usando webdriver_manager para instalar o ChromeDriver automaticamente
+    service = Service(ChromeDriverManager().install())
+    driver = webdriver.Chrome(service=service, options=chrome_options)
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.8'  # Define a versão do Python que você quer usar
+    try:
+        # Defina a URL de destino onde o anúncio será carregado
+        ad_url = "http://localhost:8080/ad.html"  # Substitua pela URL real onde o HTML está hospedado
+        print(f"Acessando a URL do anúncio: {ad_url}")
+        driver.get(ad_url)
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install selenium webdriver-manager
+        # Adicionando o script do anúncio à página
+        ad_script = """
+        if (typeof atAsyncOptions !== 'object') var atAsyncOptions = [];
+        atAsyncOptions.push({
+            'key': 'f6facc0ef48e1dfaf88283c5ead94135',
+            'format': 'js',
+            'async': true,
+            'container': 'atContainer-f6facc0ef48e1dfaf88283c5ead94135',
+            'params' : {}
+        });
+        var script = document.createElement('script');
+        script.type = "text/javascript";
+        script.async = true;
+        script.src = 'http://www.highperformanceformat.com/f6facc0ef48e1dfaf88283c5ead94135/invoke.js';
+        document.getElementsByTagName('head')[0].appendChild(script);
+        """
+        driver.execute_script(ad_script)
+        print("Script do anúncio adicionado à página.")
 
-    - name: Run Python script
-      run: |
-        python seu_script.py  # Nome do seu script Python
+        # Aguardar o carregamento do contêiner do anúncio (com WebDriverWait)
+        wait = WebDriverWait(driver, 30)
+        print("Aguardando o contêiner do anúncio carregar...")
+        time.sleep(10)  # Aguarde mais um pouco para garantir que tudo carregou
 
+        # Localizar o contêiner do anúncio pelo ID
+        ad_container = wait.until(EC.presence_of_element_located((By.ID, "atContainer-f6facc0ef48e1dfaf88283c5ead94135")))
+        print("Contêiner do anúncio carregado com sucesso!")
+
+        # Obter o conteúdo HTML do contêiner
+        container_html = ad_container.get_attribute("innerHTML")
+        print("HTML do contêiner do anúncio:")
+        print(container_html)
+
+        if not container_ht
