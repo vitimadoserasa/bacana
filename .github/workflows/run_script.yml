@@ -1,69 +1,30 @@
-import time
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.chrome import ChromeDriverManager
+name: Run Selenium Script
 
-def extract_ad_data():
-    print("Iniciando a extração de dados de anúncios...")  # Início do script
+on:
+  push:
+    branches:
+      - main  # Você pode alterar para o nome da sua branch principal
+  workflow_dispatch:
 
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")  # Executando sem interface gráfica
-    chrome_options.add_argument("--no-sandbox")  # Necessário para ambientes como GitHub Actions
-    chrome_options.add_argument("--disable-dev-shm-usage")  # Necessário para ambientes como GitHub Actions
+jobs:
+  build:
+    runs-on: ubuntu-latest  # Usando uma máquina virtual do Ubuntu
 
-    # Usando webdriver_manager para instalar o ChromeDriver automaticamente
-    service = Service(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=service, options=chrome_options)
+    steps:
+    - name: Check out the repository
+      uses: actions/checkout@v3
 
-    try:
-        # Defina a URL de destino
-        ad_url = "http://localhost:8080/ad.html"
-        print(f"Acessando a URL do anúncio: {ad_url}")
-        driver.get(ad_url)
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.8'  # Define a versão do Python que você quer usar
 
-        # Aguardar o carregamento do anúncio (com WebDriverWait)
-        wait = WebDriverWait(driver, 30)
-        print("Aguardando o contêiner do anúncio carregar...")
-        time.sleep(10)  # Aguarde mais um pouco para garantir que tudo carregou
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install selenium webdriver-manager
 
-        # Localizar o contêiner do anúncio pelo ID
-        ad_container = wait.until(EC.presence_of_element_located((By.ID, "atContainer-f6facc0ef48e1dfaf88283c5ead94135")))
-        print("Contêiner do anúncio carregado com sucesso!")
-
-        # Obter o conteúdo HTML do contêiner
-        container_html = ad_container.get_attribute("innerHTML")
-        print("HTML do contêiner do anúncio:")
-        print(container_html)
-
-        if not container_html.strip():
-            print("⚠️ O contêiner do anúncio ainda está vazio!")
-            return {"image_url": None, "link_url": None}
-
-        # Buscar o link e a imagem dentro do contêiner
-        ad_link_element = ad_container.find_element(By.TAG_NAME, "a")
-        ad_image_element = ad_container.find_element(By.TAG_NAME, "img")
-
-        ad_link = ad_link_element.get_attribute("href")
-        ad_image = ad_image_element.get_attribute("src")
-
-        print(f"Imagem do anúncio: {ad_image}")
-        print(f"Link do anúncio: {ad_link}")
-
-        return {"image_url": ad_image, "link_url": ad_link}
-
-    except Exception as e:
-        print(f"Erro ao processar anúncio: {e}")
-        return {"image_url": None, "link_url": None}
-
-    finally:
-        driver.quit()
-        print("Fechando o navegador e finalizando o script...")  # Finalizando o script
-
-if __name__ == "__main__":
-    ad_data = extract_ad_data()
-    print(f"Dados extraídos: {ad_data}")
+    - name: Run Python script
+      run: |
+        python seu_script.py  # Nome do seu script Python
 
