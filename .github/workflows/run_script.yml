@@ -62,9 +62,8 @@ def extract_ad_data():
         wait = WebDriverWait(driver, 30)
 
         print("Aguardando o carregamento do contêiner do anúncio...")
-        time.sleep(10)  # 🔹 Espera extra para garantir que o JS Async carregue
-
-        # 🔹 Localizar o contêiner do anúncio
+        
+        # 🔹 Espera até que o contêiner do anúncio esteja presente na página
         ad_container = wait.until(
             EC.presence_of_element_located((By.ID, "atContainer-f6facc0ef48e1dfaf88283c5ead94135"))
         )
@@ -76,17 +75,22 @@ def extract_ad_data():
         print(container_html)
 
         # 🔹 Extrair a URL da imagem e do link, se estiverem disponíveis
+        ad_image = None
+        ad_link = None
+
         try:
             ad_image_element = ad_container.find_element(By.TAG_NAME, "img")
             ad_image = ad_image_element.get_attribute("src")
-        except:
-            ad_image = None
+            print(f"URL da imagem do anúncio: {ad_image}")
+        except Exception as e:
+            print(f"Não foi possível encontrar a imagem do anúncio: {e}")
 
         try:
             ad_link_element = ad_container.find_element(By.TAG_NAME, "a")
             ad_link = ad_link_element.get_attribute("href")
-        except:
-            ad_link = None
+            print(f"URL do link do anúncio: {ad_link}")
+        except Exception as e:
+            print(f"Não foi possível encontrar o link do anúncio: {e}")
 
         return {"image_url": ad_image, "link_url": ad_link}
 
