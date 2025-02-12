@@ -1,20 +1,31 @@
-<script type="text/javascript">
-    window.atAsyncOptions = window.atAsyncOptions || [];
-    window.atAsyncOptions.push({
-        key: "f6facc0ef48e1dfaf88283c5ead94135",
-        format: "js",
-        async: true,
-        container: "atContainer-f6facc0ef48e1dfaf88283c5ead94135",
-        params: {}
-    });
+name: Run Selenium Script
 
-    (function() {
-        let script = document.createElement("script");
-        script.type = "text/javascript";
-        script.async = true;
-        script.src = "https://www.highperformanceformat.com/f6facc0ef48e1dfaf88283c5ead94135/invoke.js";
-        document.head.appendChild(script);
-    })();
-</script>
+on:
+  workflow_dispatch:  # Permite rodar manualmente
+  schedule:
+    - cron: "0 * * * *"  # Roda a cada hora (modifique se necessário)
 
-<div id="atContainer-f6facc0ef48e1dfaf88283c5ead94135"></div>
+jobs:
+  run-selenium:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clonar repositório
+        uses: actions/checkout@v3
+
+      - name: Instalar Google Chrome e ChromeDriver
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+          sudo apt-get install -y chromium-chromedriver
+
+      - name: Configurar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Instalar dependências
+        run: pip install -r requirements.txt
+
+      - name: Executar script Selenium
+        run: python main.py
