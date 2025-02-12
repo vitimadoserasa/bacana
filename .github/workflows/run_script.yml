@@ -66,3 +66,4 @@ def extract_ad_data():
 if __name__ == "__main__":
     ad_data = extract_ad_data()
     print(f"Dados extraídos: {ad_data}")
+
