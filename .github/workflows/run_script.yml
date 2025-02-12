@@ -11,66 +11,82 @@ def extract_ad_data():
     print("Iniciando a extração de dados de anúncios...")
 
     chrome_options = Options()
-    chrome_options.add_argument("--headless")  # Executando sem interface gráfica
-    chrome_options.add_argument("--no-sandbox")  # Necessário para ambientes como GitHub Actions
-    chrome_options.add_argument("--disable-dev-shm-usage")  # Necessário para ambientes como GitHub Actions
+    chrome_options.add_argument("--headless")  # Executa sem interface gráfica
+    chrome_options.add_argument("--no-sandbox")  
+    chrome_options.add_argument("--disable-dev-shm-usage")
 
-    # Usando webdriver_manager para instalar o ChromeDriver automaticamente
+    # Instala e configura o ChromeDriver
     service = Service(ChromeDriverManager().install())
     driver = webdriver.Chrome(service=service, options=chrome_options)
 
     try:
-        # Defina a URL de destino onde o anúncio será carregado
-        ad_url = "http://localhost:8080/ad.html"  # Substitua pela URL real onde o HTML está hospedado
-        print(f"Acessando a URL do anúncio: {ad_url}")
-        driver.get(ad_url)
+        # 🔹 Criando um HTML temporário para carregar o JS Async
+        html_content = """
+        <html>
+        <head>
+            <title>Teste de Anúncio JS Async</title>
+        </head>
+        <body>
+            <h1>Bem-vindo ao Teste de Anúncios</h1>
 
-        # Adicionando o script do anúncio à página
-        ad_script = """
-        if (typeof atAsyncOptions !== 'object') var atAsyncOptions = [];
-        atAsyncOptions.push({
-            'key': 'f6facc0ef48e1dfaf88283c5ead94135',
-            'format': 'js',
-            'async': true,
-            'container': 'atContainer-f6facc0ef48e1dfaf88283c5ead94135',
-            'params' : {}
-        });
-        var script = document.createElement('script');
-        script.type = "text/javascript";
-        script.async = true;
-        script.src = 'http://www.highperformanceformat.com/f6facc0ef48e1dfaf88283c5ead94135/invoke.js';
-        document.getElementsByTagName('head')[0].appendChild(script);
+            <!-- 🔹 Div onde o anúncio será carregado -->
+            <div id="atContainer-f6facc0ef48e1dfaf88283c5ead94135"></div>
+
+            <!-- 🔹 Tag JS Async para carregar o anúncio -->
+            <script type="text/javascript">
+                if (typeof atAsyncOptions !== 'object') var atAsyncOptions = [];
+                atAsyncOptions.push({
+                    'key': 'f6facc0ef48e1dfaf88283c5ead94135',
+                    'format': 'js',
+                    'async': true,
+                    'container': 'atContainer-f6facc0ef48e1dfaf88283c5ead94135',
+                    'params' : {}
+                });
+                var script = document.createElement('script');
+                script.type = "text/javascript";
+                script.async = true;
+                script.src = 'http' + (location.protocol === 'https:' ? 's' : '') + '://www.highperformanceformat.com/f6facc0ef48e1dfaf88283c5ead94135/invoke.js';
+                document.getElementsByTagName('head')[0].appendChild(script);
+            </script>
+        </body>
+        </html>
         """
-        driver.execute_script(ad_script)
-        print("Script do anúncio adicionado à página.")
 
-        # Aguardar o carregamento do contêiner do anúncio (com WebDriverWait)
+        # 🔹 Salvando o HTML temporário em um arquivo
+        with open("ad_test.html", "w", encoding="utf-8") as f:
+            f.write(html_content)
+
+        # 🔹 Abrindo o arquivo local no Selenium
+        driver.get("file://" + "/home/ubuntu/ad_test.html")
+
         wait = WebDriverWait(driver, 30)
-        print("Aguardando o contêiner do anúncio carregar...")
-        time.sleep(10)  # Aguarde mais um pouco para garantir que tudo carregou
 
-        # Localizar o contêiner do anúncio pelo ID
-        ad_container = wait.until(EC.presence_of_element_located((By.ID, "atContainer-f6facc0ef48e1dfaf88283c5ead94135")))
-        print("Contêiner do anúncio carregado com sucesso!")
+        print("Aguardando o carregamento do contêiner do anúncio...")
+        time.sleep(10)  # 🔹 Espera extra para garantir que o JS Async carregue
 
-        # Obter o conteúdo HTML do contêiner
+        # 🔹 Localizar o contêiner do anúncio
+        ad_container = wait.until(
+            EC.presence_of_element_located((By.ID, "atContainer-f6facc0ef48e1dfaf88283c5ead94135"))
+        )
+        print("Contêiner do anúncio encontrado!")
+
+        # 🔹 Obter o conteúdo do anúncio dentro do contêiner
         container_html = ad_container.get_attribute("innerHTML")
         print("HTML do contêiner do anúncio:")
         print(container_html)
 
-        if not container_html.strip():
-            print("⚠️ O contêiner do anúncio ainda está vazio!")
-            return {"image_url": None, "link_url": None}
+        # 🔹 Extrair a URL da imagem e do link, se estiverem disponíveis
+        try:
+            ad_image_element = ad_container.find_element(By.TAG_NAME, "img")
+            ad_image = ad_image_element.get_attribute("src")
+        except:
+            ad_image = None
 
-        # Buscar o link e a imagem dentro do contêiner
-        ad_link_element = ad_container.find_element(By.TAG_NAME, "a")
-        ad_image_element = ad_container.find_element(By.TAG_NAME, "img")
-
-        ad_link = ad_link_element.get_attribute("href")
-        ad_image = ad_image_element.get_attribute("src")
-
-        print(f"Imagem do anúncio: {ad_image}")
-        print(f"Link do anúncio: {ad_link}")
+        try:
+            ad_link_element = ad_container.find_element(By.TAG_NAME, "a")
+            ad_link = ad_link_element.get_attribute("href")
+        except:
+            ad_link = None
 
         return {"image_url": ad_image, "link_url": ad_link}
 
@@ -80,9 +96,7 @@ def extract_ad_data():
 
     finally:
         driver.quit()
-        print("Fechando o navegador e finalizando o script...")
 
 if __name__ == "__main__":
     ad_data = extract_ad_data()
-    print(f"Dados extraídos: {ad_data}")
-
+    print(ad_data)
