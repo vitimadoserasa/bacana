@@ -1,17 +1,20 @@
 <script type="text/javascript">
-      if (typeof atAsyncOptions !== 'object') var atAsyncOptions = [];
-      atAsyncOptions.push({
-          'key': 'f6facc0ef48e1dfaf88283c5ead94135',
-          'format': 'js',
-          'async': true,
-          'container': 'atContainer-f6facc0ef48e1dfaf88283c5ead94135',
-          'params' : {}
-      });
-      var script = document.createElement('script');
-      script.type = "text/javascript";
-      script.async = true;
-      script.src = 'http' + (location.protocol === 'https:' ? 's' : '') + '://www.highperformanceformat.com/f6facc0ef48e1dfaf88283c5ead94135/invoke.js';
-      document.getElementsByTagName('head')[0].appendChild(script);
-  </script>
+    window.atAsyncOptions = window.atAsyncOptions || [];
+    window.atAsyncOptions.push({
+        key: "f6facc0ef48e1dfaf88283c5ead94135",
+        format: "js",
+        async: true,
+        container: "atContainer-f6facc0ef48e1dfaf88283c5ead94135",
+        params: {}
+    });
 
-  <div id="atContainer-f6facc0ef48e1dfaf88283c5ead94135"></div> 
+    (function() {
+        let script = document.createElement("script");
+        script.type = "text/javascript";
+        script.async = true;
+        script.src = "https://www.highperformanceformat.com/f6facc0ef48e1dfaf88283c5ead94135/invoke.js";
+        document.head.appendChild(script);
+    })();
+</script>
+
+<div id="atContainer-f6facc0ef48e1dfaf88283c5ead94135"></div>
